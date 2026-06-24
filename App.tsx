@@ -10,7 +10,8 @@ import LogViewer from './components/LogViewer';
 type AiProvider = 'gemini' | 'openai';
 
 const GEMINI_MODELS = [
-  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Recomendado)' },
+  { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash (Recomendado)' },
+  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
   { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (Raciocínio Avançado)' },
   { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
   { id: 'gemini-2.0-pro-exp-02-05', name: 'Gemini 2.0 Pro (Experimental)' }
