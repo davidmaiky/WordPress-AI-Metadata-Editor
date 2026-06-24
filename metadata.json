@@ -1,0 +1,6 @@
+{
+  "name": "WP Gemini Metadata Editor",
+  "description": "A powerful tool to automatically generate SEO-optimized metadata for WordPress images using Google Gemini AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
