@@ -1,11 +1,12 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Upload, Sparkles, Save, FileImage, Zap, Link, Key, Bot, Cpu, Eye, EyeOff, X, History, Trash2, RotateCcw, Download, SlidersHorizontal } from 'lucide-react';
+import { Upload, Sparkles, Save, FileImage, Zap, Link, Key, Bot, Cpu, Eye, EyeOff, X, History, Trash2, RotateCcw, Download, SlidersHorizontal, LogOut } from 'lucide-react';
 import { ImageMetadata, LogEntry, AppState, HistoryItem } from './types';
 import { generateMetadata as generateGemini } from './services/geminiService';
 import { generateMetadataWithOpenAI } from './services/openaiService';
 import Button from './components/Button';
 import { InputField, TextAreaField } from './components/InputField';
 import LogViewer from './components/LogViewer';
+import { Login } from './components/Login';
 
 type AiProvider = 'gemini' | 'openai';
 
@@ -24,6 +25,10 @@ const OPENAI_MODELS = [
 ];
 
 const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [contextText, setContextText] = useState('');
@@ -51,6 +56,38 @@ const App: React.FC = () => {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Check authentication session on load
+    const savedSession = localStorage.getItem('wp_metadata_session') || sessionStorage.getItem('wp_metadata_session');
+    if (savedSession) {
+      setIsAuthenticated(true);
+      setCurrentUser(savedSession);
+    }
+    setIsAuthChecking(false);
+  }, []);
+
+  const handleLoginSuccess = (username: string, rememberMe: boolean) => {
+    setIsAuthenticated(true);
+    setCurrentUser(username);
+    if (rememberMe) {
+      localStorage.setItem('wp_metadata_session', username);
+    } else {
+      sessionStorage.setItem('wp_metadata_session', username);
+    }
+    addLog(`Usuário "${username}" conectado com sucesso.`, 'success');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('wp_metadata_session');
+    sessionStorage.removeItem('wp_metadata_session');
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setFile(null);
+    setPreviewUrl(null);
+    setContextText('');
+    setMetadata({ title: '', caption: '', description: '', altText: '', tags: '', author: '' });
+  };
 
   useEffect(() => {
     localStorage.setItem('wp_metadata_gemini_key', geminiKey);
@@ -276,11 +313,36 @@ const App: React.FC = () => {
     handleCompressAndExport();
   };
 
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-950 text-white">
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
       <div className="max-w-3xl w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-8">
         
-        <div className="bg-slate-800 p-6 text-center">
+        <div className="bg-slate-800 p-6 text-center relative">
+          <div className="absolute right-4 top-4 flex items-center gap-2">
+            <span className="hidden sm:inline-flex text-[10px] sm:text-xs text-slate-300 bg-slate-700/50 px-2.5 py-1 rounded-full border border-slate-700 font-medium">
+              Olá, <span className="text-white font-bold ml-1">{currentUser}</span>
+            </span>
+            <button 
+              onClick={handleLogout}
+              className="p-1.5 bg-slate-700 hover:bg-red-600/80 text-slate-300 hover:text-white rounded-lg transition-all text-xs flex items-center gap-1.5 border border-slate-600/30"
+              title="Sair do sistema"
+            >
+              <LogOut size={14} />
+              <span className="hidden sm:inline">Sair</span>
+            </button>
+          </div>
           <h1 className="text-2xl font-bold text-white flex items-center justify-center gap-3">
             <Sparkles className="text-yellow-400" />
             Editor de Metadados com IA
